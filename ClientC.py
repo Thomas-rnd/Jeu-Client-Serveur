@@ -16,10 +16,10 @@ from random import *
 from math import *
 
 #Constantes
-JEU_LARGEUR = 11
-JEU_HAUTEUR = 9
-CAN_LARGEUR = 550
-CAN_HAUTEUR = 450
+JEU_LARGEUR = 3
+JEU_HAUTEUR = 3
+CAN_LARGEUR = 150
+CAN_HAUTEUR = 150
 
 INITIAL=0
 ACTIVE=1
@@ -155,9 +155,6 @@ class Fenetre(Tk):
                                      text="Quitter", command=self.destroy)
         self.bouton_quitter.pack(side = BOTTOM, pady = 10)
         self.bouton_valider.pack(pady = 10)
-        self.bouton_abandon=Button(self.partie_affichage, text= 'Abandonner',
-                                   command = lambda : self.client.Send({"action" : "abandon" }))
-        self.bouton_abandon.pack(pady = 10)
         
         #Vérifie les clicks de souris et lance la boucle maj
         self.canva.bind("<ButtonRelease-1>", self.souris)
@@ -183,7 +180,7 @@ class Fenetre(Tk):
         
         #Si 3 points sélectionnés, cette liste est envoyée au serveur pour être 
         #vérifiée
-        if len(liste_pt_noir) == 3:
+        if len(liste_pt_noir) == 2:
             self.client.Send({"action" : "valid", "valid" : liste_pt_noir})
             
     def dessiner(self):
@@ -197,25 +194,24 @@ class Fenetre(Tk):
         # Parcourt tout le tableau de point pour afficher les points
         for i in range (self.jeu_largeur):
             for j in range(self.jeu_hauteur):
-                if (i+j)%2 == 0:
-                    (x1,y1) = (int(i*x_base), int(j*y_base))
-                    (x2,y2) = (int((i+1)*x_base), int((j+1)*y_base))
-                    if self.tab[i][j] == 'Neutre':
-                        self.canva.create_oval(x1+x_ecart,y1+y_ecart,
-                                               x2-x_ecart,y2-y_ecart,
-                                               fill=COULEUR.get(self.tab[i][j]))
-                    elif self.tab[i][j] == 'Sélectionné':
-                        self.canva.create_oval(x1+x_ecart,y1+y_ecart,
-                                               x2-x_ecart,y2-y_ecart,
-                                               fill=COULEUR.get(self.tab[i][j]))
-                    elif self.tab[i][j] == 'Appartient au joueur 1':
-                        self.canva.create_oval(x1+x_ecart,y1+y_ecart,
-                                               x2-x_ecart,y2-y_ecart,
-                                               fill=COULEUR.get(self.tab[i][j]))
-                    elif self.tab[i][j] == 'Appartient au joueur 2':
-                        self.canva.create_oval(x1+x_ecart,y1+x_ecart,
-                                               x2-x_ecart,y2-y_ecart,
-                                               fill=COULEUR.get(self.tab[i][j])) 
+                (x1,y1) = (int(i*x_base), int(j*y_base))
+                (x2,y2) = (int((i+1)*x_base), int((j+1)*y_base))
+                if self.tab[i][j] == 'Neutre':
+                    self.canva.create_oval(x1+x_ecart,y1+y_ecart,
+                                           x2-x_ecart,y2-y_ecart,
+                                           fill=COULEUR.get(self.tab[i][j]))
+                elif self.tab[i][j] == 'Sélectionné':
+                    self.canva.create_oval(x1+x_ecart,y1+y_ecart,
+                                              x2-x_ecart,y2-y_ecart,
+                                              fill=COULEUR.get(self.tab[i][j]))
+                elif self.tab[i][j] == 'Appartient au joueur 1':
+                    self.canva.create_oval(x1+x_ecart,y1+y_ecart,
+                                           x2-x_ecart,y2-y_ecart,
+                                           fill=COULEUR.get(self.tab[i][j]))
+                elif self.tab[i][j] == 'Appartient au joueur 2':
+                    self.canva.create_oval(x1+x_ecart,y1+x_ecart,
+                                           x2-x_ecart,y2-y_ecart,
+                                           fill=COULEUR.get(self.tab[i][j])) 
 
         #Parcourt tout le tableau de ligne pour afficher les lignes
         for i in range (len(self.tab_lig)):
