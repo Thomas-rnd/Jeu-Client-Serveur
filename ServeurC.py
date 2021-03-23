@@ -14,10 +14,10 @@ from random import *
 from math import *
 
 #Constantes
-JEU_LARGEUR = 11
-JEU_HAUTEUR = 9
-CAN_LARGEUR = 550
-CAN_HAUTEUR = 450
+JEU_LARGEUR = 3
+JEU_HAUTEUR = 3
+CAN_LARGEUR = 150
+CAN_HAUTEUR = 150
 
 #Dictionnaire associant les différents états possible d'un point à une couleur.
 COULEUR = {"Sélectionné": 'black', "Neutre": 'grey', "Appartient au joueur 1": 'red',
@@ -37,7 +37,7 @@ CONVERSION = {"Pixel largeur": CAN_LARGEUR/JEU_LARGEUR, "Pixel hauteur": CAN_HAU
 ##################################################################################################
 
 
-class JeuSaucisse():
+class JeuPipopipette():
     """Gère le système de jeu, règles du jeu, création de saucisses, recommencer une 
     partie et abandonner."""  
     def __init__(self):
@@ -51,38 +51,31 @@ class JeuSaucisse():
     def recommencer(self):
         """Réinitialise le tableau contenant les etats de tous les points et croisements 
         du plateau de jeu."""
-        self.tableau = []
+        self.tableau_point = []
+        self.tableau_carré=[]
         self.tableau_ligne=[]
         for i in range (self.nbr_colonne):
             ligne = []
             for j in range (self.nbr_ligne):
-                if (i+j)%2==0:
                     ligne.append('Neutre')
-                else :
-                    ligne.append('croisement vide')
-            self.tableau.append(ligne)
+            self.tableau_point.append(ligne)
     
     def changer_etat(self, action, i, j):
         """Permet de changer l'état d'un point (pour l'état sélectioné ou validé) et 
         d'un croissement pour l'état vide ou occupé.""" 
-        etat = self.tableau[i][j]
+        etat = self.tableau_point[i][j]
         if action == 'selection':
             if etat == 'Neutre':
                 etat = 'Sélectionné'
             elif etat == 'Sélectionné':
                 etat = 'Neutre'
-            elif etat == 'croisement vide':
-                etat = 'croisement occupe'
             
         elif action == 'validation':
-            if self.joueur == 0:
-                etat = 'Appartient au joueur 1'
-            elif self.joueur == 1:
-                etat = 'Appartient au joueur 2'
-        
-        self.tableau[i][j]=etat
+            etat = 'Neutre'
+
+        self.tableau_point[i][j]=etat
     
-    def creer_saucisse(self, liste):
+    def creer_trait(self, liste):
         """Ajout des coordonnées d'une saucisse dans le tableau lignes"""
         DEMI_CARRE_X=(CAN_LARGEUR//self.nbr_colonne)/2
         DEMI_CARRE_Y=(CAN_HAUTEUR//self.nbr_ligne)/2
@@ -92,22 +85,22 @@ class JeuSaucisse():
         #Parcourt la liste de points donnée en entrée et ajoute les coordonnées des lignes
         #entre chaque point et son suivant (la couleur dépend du joueur qui joue)
         for i in range (len(liste)-1):
-            if self.joueur == 0:
-                (x1,y1)=(x_base*liste[i][COL], y_base*liste[i][LIG])
-                (x2,y2)=(x_base*liste[i+1][COL], y_base*liste[i+1][LIG])
-                self.tableau_ligne.append([x1+DEMI_CARRE_X,y1+DEMI_CARRE_Y,
-                                           x2+DEMI_CARRE_X,y2+DEMI_CARRE_Y, 'blue'])
-            else : 
-                (x1,y1)=(x_base*liste[i][COL],y_base*liste[i][LIG])
-                (x2,y2)=(x_base*liste[i+1][COL],y_base*liste[i+1][LIG])
-                self.tableau_ligne.append([x1+DEMI_CARRE_X, y1+DEMI_CARRE_Y,
-                                           x2+DEMI_CARRE_X, y2+DEMI_CARRE_Y, 'red'])
+            (x1,y1)=(x_base*liste[i][COL], y_base*liste[i][LIG])
+            (x2,y2)=(x_base*liste[i+1][COL], y_base*liste[i+1][LIG])
+            trait = [x1+DEMI_CARRE_X,y1+DEMI_CARRE_Y,
+                     x2+DEMI_CARRE_X,y2+DEMI_CARRE_Y, 'black']
+            for ligne in self.tableau_ligne :
+                if ligne == trait :
+                    return None
+                
+        self.tableau_ligne.append(trait)
+        return ("OK")
 
     def accessible(self,liste):
         """Vérifie si les points sélectionnés en noir peuvent être une saucisse
         (3 points côte à côte et pas de croissement)."""   
-        NORME = (CAN_LARGEUR//JEU_LARGEUR)*2
-        norme = []
+        NORME = CAN_LARGEUR//JEU_LARGEUR
+        norme = 0
         (COL,LIG) = (0,1)
         (x_base,y_base) = (CONVERSION.get("Pixel largeur"),CONVERSION.get("Pixel hauteur"))
         
@@ -116,42 +109,11 @@ class JeuSaucisse():
         for i in range (len(liste)-1):
             (x1,y1)=(x_base*liste[i][COL],y_base*liste[i][LIG])
             (x2,y2)=(x_base*liste[i+1][COL],y_base*liste[i+1][LIG])
-            norme.append(sqrt(((x2-x1)**2)+((y2-y1)**2)))
+            norme = sqrt(((x2-x1)**2)+((y2-y1)**2))
+        if norme != NORME : 
+            return None
         
-        (x_init,y_init)=(x_base*liste[0][COL],y_base*liste[0][LIG])
-        (x_fin,y_fin)=(x_base*liste[len(liste)-1][COL],
-                       y_base*liste[len(liste)-1][LIG])
-        norme.append(sqrt(((x_fin-x_init)**2)+((y_fin-y_init)**2)))
-        
-        #Si une norme est trop grande (points trop espacés), la liste de point est 
-        #réordonnée et la norme est supprimée de la liste des normes
-        erreur = []
-        for i in range(len(norme)):
-            if norme[i] > NORME:
-                if i != len(norme)-1:
-                    liste.append(liste.pop(i+1))
-                    liste.insert(0,liste.pop(i))
-                erreur.insert(0,i)
-        for i in erreur:
-            norme.pop(i)
-        
-        #Si la liste de norme contient moins de 2 normes, c'est que les points sont trop espacés
-        if len(norme)<=1:
-            return (None,None)
-        
-        #Parcourt la liste de point (dorénavant ordonnée) et si 2 points sont sur une
-        #même colonne/ligne, vérifie s'il y a un croisement puis change son état
-        croisement = []
-        for i in range (len(liste)-1):
-            (i1,j1)=(liste[i][COL],liste[i][LIG])
-            (i2,j2)=(liste[i+1][COL],liste[i+1][LIG])
-            if i1==i2 or j1==j2:
-                (ic,jc) = ((i1+i2)//2,(j1+j2)//2)
-                if self.tableau[ic][jc] == 'croisement occupe':
-                    return (None,None)
-                else :
-                    croisement.append([ic,jc])
-        return (liste,croisement)
+        return (liste)
     
     
 ##################################################################################################
@@ -181,7 +143,7 @@ class ClientChannel(Channel):
         
         (i,j) = data["souris"]
         jeu.changer_etat("selection", i, j)
-        self._server.SendToEveryone("tableau", {"tableau": jeu.tableau})
+        self._server.SendToEveryone("tableau", {"tableau": jeu.tableau_point})
         
     def Network_valid(self, data):
         """Verifie si le bon joueur joue, change l'état des points et des croissements
@@ -196,13 +158,14 @@ class ClientChannel(Channel):
             return
         
         #Récupère la liste de points validés et les croisements associés pour changer leur état
-        (liste,croisement) = jeu.accessible(data["valid"])
+        liste = jeu.accessible(data["valid"])
         if liste is None:
             return
+        if jeu.creer_trait(liste) is None :
+            return
+            
         for pt in liste:
             jeu.changer_etat('validation', pt[0], pt[1])   
-        for cr in croisement:
-            jeu.changer_etat('selection', cr[0], cr[1])
         
         #Change le joueur qui doit jouer
         if jeu.joueur == 0 :
@@ -211,8 +174,7 @@ class ClientChannel(Channel):
             jeu.joueur = 0
         
         #Crée une saucisse avec les points validés et envoie toutes les infos aux joueurs
-        jeu.creer_saucisse(liste)
-        self._server.SendToEveryone("tableau", {"tableau" : jeu.tableau})
+        self._server.SendToEveryone("tableau", {"tableau" : jeu.tableau_point})
         self._server.SendToEveryone("tableau_ligne", {"tableau_ligne" : jeu.tableau_ligne})      
         self._server.SendToEveryone("joueur", {"joueur" : self._server.liste_joueurs[jeu.joueur]})
     
@@ -222,32 +184,9 @@ class ClientChannel(Channel):
         self._server.liste_joueurs.append(self.nickname)
         self._server.PrintPlayers()
         self.Send({"action" : "start"})
-        self.Send({"action" : "joueur", "joueur" : self._server.liste_joueurs[jeu.joueur]})
-    
-    def Network_abandon(self, data):
-        """Augmente le score du joueur qui n'a pas abandonner et réinitialisele plateau de jeu."""
-        
-        #Si le joueur qui a cliqué n'est pas celui qui doit jouer ou s'il n'y a pas
-        #d'adversaire, rien ne se passe
-        who = self.nickname
-        if len(self._server.liste_joueurs)<2 or who != self._server.liste_joueurs[jeu.joueur]:
-            return
-        
-        #Change le score en fonction du joueur qui a abandonné
-        if jeu.joueur == 0 :
-            jeu.score2 += 1
-        else :
-            jeu.score1 += 1
-            
-        #Réinitialise le plateau de jeu et envoie toutes les infos aux joueurs
-        jeu.recommencer()
-        self._server.SendToEveryone("tableau", {"tableau" : jeu.tableau})
-        self._server.SendToEveryone("tableau_ligne", {"tableau_ligne" : jeu.tableau_ligne}) 
-        self._server.SendToEveryone("score", {"score" : [(jeu.score1,jeu.score2),
-                                                         (self._server.liste_joueurs[0],
-                                                          self._server.liste_joueurs[1])]})
-
-                                              
+        self.Send({"action" : "joueur", "joueur" : self._server.liste_joueurs[jeu.joueur]})  
+   
+                                           
 class MyServer(Server):
     channelClass = ClientChannel
     
@@ -265,7 +204,7 @@ class MyServer(Server):
         le tableau avec toutes les saucisses lui est envoyé."""
         print("New Player connected")
         self.players[player] = True
-        player.Send({"action" : "tableau", "tableau" : jeu.tableau})
+        player.Send({"action" : "tableau", "tableau" : jeu.tableau_point})
         player.Send({"action" : "tableau_ligne", "tableau_ligne" : jeu.tableau_ligne})
  
     def PrintPlayers(self):
@@ -300,5 +239,5 @@ else:
     host, port = sys.argv[1].split(":")
 
 s = MyServer(localaddr=(host, int(port)))
-jeu = JeuSaucisse()
+jeu = JeuPipopipette()
 s.Launch()
