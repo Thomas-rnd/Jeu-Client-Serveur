@@ -80,6 +80,10 @@ class Client(ConnectionListener):
         self.window.tab_lig = data["tableau_ligne"]
         self.window.dessiner()
         
+    def Network_tableau_pipopipette(self, data):
+        self.window.tab_pip = data["tableau_pipopipette"]
+        self.window.dessiner()
+        
     def Network_joueur(self, data):
         """Reception de la data pour savoir qui est le joueur qui doit jouer."""
         self.window.joueur = data["joueur"]
@@ -120,6 +124,7 @@ class Fenetre(Tk):
         self.can_hauteur = CAN_HAUTEUR
         self.tab = []
         self.tab_lig =[]
+        self.tab_pip=[]
         self.joueur = None
         self.score_joueur1 = 0
         self.score_joueur2= 0
@@ -191,6 +196,11 @@ class Fenetre(Tk):
         y_ecart = int((2/10)*y_base)
         self.canva.delete("all")
         
+        for i in range (len(self.tab_pip)):
+            self.canva.create_rectangle(self.tab_pip[i][0],self.tab_pip[i][1],
+                                   self.tab_pip[i][2],self.tab_pip[i][3],
+                                  fill = self.tab_pip[i][4])
+        
         # Parcourt tout le tableau de point pour afficher les points
         for i in range (self.jeu_largeur):
             for j in range(self.jeu_hauteur):
@@ -218,7 +228,7 @@ class Fenetre(Tk):
             self.canva.create_line(self.tab_lig[i][0],self.tab_lig[i][1],
                                    self.tab_lig[i][2],self.tab_lig[i][3],
                                   fill=self.tab_lig[i][4])
-            
+        
     def myMainLoop(self):
         while self.client.state!=DEAD: 
             self.update()
