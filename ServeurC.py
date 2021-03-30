@@ -161,7 +161,7 @@ class JeuPipopipette():
         self.tableau_pipopipette.append(rectangle)
         
         if len(self.tableau_pipopipette) ==  nbr_carre_total :
-            self.fin_de_partie == True
+            self.fin_de_partie = True
         
         if self.joueur == 0 :
             self.joueur = 1
