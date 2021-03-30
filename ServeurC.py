@@ -52,18 +52,29 @@ class JeuPipopipette():
         """Réinitialise le tableau contenant les etats de tous les points et croisements 
         du plateau de jeu."""
         self.tableau_point = []
-        self.tableau_carré=[]
-        self.tableau_ligne=[]
+        self.tableau_carre = []
+        self.tableau_ligne = []
+        self.tableau_pipopipette = []
+        self.nbr_carre_rouge = 0
+        self.nbr_carre_bleu = 0
+        self.fin_de_partie = False
         for i in range (self.nbr_colonne):
             ligne = []
             for j in range (self.nbr_ligne):
                     ligne.append('Neutre')
             self.tableau_point.append(ligne)
+        for i in range (self.nbr_colonne-1):
+            ligne=[]
+            for j in range (self.nbr_ligne-1):
+                ligne.append(['Neutre', 'Neutre', 'Neutre', 'Neutre'])
+            self.tableau_carre.append(ligne)
+            
     
     def changer_etat(self, action, i, j):
         """Permet de changer l'état d'un point (pour l'état sélectioné ou validé) et 
         d'un croissement pour l'état vide ou occupé.""" 
         etat = self.tableau_point[i][j]
+        
         if action == 'selection':
             if etat == 'Neutre':
                 etat = 'Sélectionné'
@@ -72,8 +83,18 @@ class JeuPipopipette():
             
         elif action == 'validation':
             etat = 'Neutre'
-
-        self.tableau_point[i][j]=etat
+        
+        elif action == 'carré' : 
+            if self.tableau_carre[i][j][2] == 'Occupé' :
+                self.tableau_carre[i][j][3] = self.joueur
+                self.creer_carre(i,j)
+                return
+            for arrete in range(3) : 
+                if self.tableau_carre[i][j][arrete] == 'Neutre' : 
+                    self.tableau_carre[i][j][arrete] = 'Occupé'
+                    return 
+                
+        self.tableau_point[i][j] = etat
     
     def creer_trait(self, liste):
         """Ajout des coordonnées d'une saucisse dans le tableau lignes"""
@@ -93,8 +114,59 @@ class JeuPipopipette():
                 if ligne == trait :
                     return None
                 
+        i_1 = liste[0][COL]
+        j_1 = liste[0][LIG]
+        i_2 = liste[1][COL]
+        j_2 = liste[1][LIG]
+        i_min = min(i_1,i_2)
+        j_min = min(j_1,j_2)
+        
+        if i_1 == i_2 :
+            if i_1 == 0  :
+                self.changer_etat('carré', i_min, j_min)
+            elif i_1 == len(self.tableau_carre) :
+                self.changer_etat('carré', i_min-1, j_min)
+            else : 
+                self.changer_etat('carré', i_min-1, j_min)
+                self.changer_etat('carré', i_min, j_min)
+        else : 
+            if j_1 == 0 :
+                self.changer_etat('carré', i_min, j_min)
+            elif j_1 == len(self.tableau_carre) :
+                self.changer_etat('carré', i_min, j_min-1)
+            else : 
+                self.changer_etat('carré', i_min, j_min-1)
+                self.changer_etat('carré', i_min, j_min)
+            
         self.tableau_ligne.append(trait)
-        return ("OK")
+        return ("OK")  
+    
+    def creer_carre(self, i, j): 
+        (col,lig)=(i,j)
+        (x_base,y_base) = (CONVERSION.get("Pixel largeur"),CONVERSION.get("Pixel hauteur"))
+        DEMI_CARRE_X=(CAN_LARGEUR//self.nbr_colonne)/2
+        DEMI_CARRE_Y=(CAN_HAUTEUR//self.nbr_ligne)/2
+        (x1,y1)=(x_base*col, y_base*lig)
+        (x2,y2)=(x_base*(col+1), y_base*(lig+1))
+        nbr_carre_total = (self.nbr_colonne-1)*(self.nbr_ligne-1)
+        
+        if self.joueur == 0 :
+            self.nbr_carre_rouge += 1
+            rectangle = [x1+DEMI_CARRE_X, y1+DEMI_CARRE_Y, 
+                         x2+DEMI_CARRE_X, y2+DEMI_CARRE_Y, 'red']
+        else : 
+            self.nbr_carre_bleu += 1
+            rectangle = [x1+DEMI_CARRE_X, y1+DEMI_CARRE_Y, 
+                         x2+DEMI_CARRE_X, y2+DEMI_CARRE_Y, 'blue']
+        self.tableau_pipopipette.append(rectangle)
+        
+        if len(self.tableau_pipopipette) ==  nbr_carre_total :
+            self.fin_de_partie == True
+        
+        if self.joueur == 0 :
+            self.joueur = 1
+        else :
+            self.joueur = 0
 
     def accessible(self,liste):
         """Vérifie si les points sélectionnés en noir peuvent être une saucisse
@@ -166,17 +238,29 @@ class ClientChannel(Channel):
             
         for pt in liste:
             jeu.changer_etat('validation', pt[0], pt[1])   
-        
+            
         #Change le joueur qui doit jouer
         if jeu.joueur == 0 :
             jeu.joueur = 1
         else :
             jeu.joueur = 0
+            
+        if jeu.fin_de_partie == True :
+            if jeu.nbr_carre_rouge > jeu.nbr_carre_bleu : 
+                jeu.score1 += 1
+            elif jeu.nbr_carre_rouge < jeu.nbr_carre_bleu :
+                jeu.score2 += 1
+            jeu.recommencer()
+            self._server.SendToEveryone("score", {"score" : [(jeu.score1,jeu.score2),
+                                                         (self._server.liste_joueurs[0],
+                                                          self._server.liste_joueurs[1])]})
         
         #Crée une saucisse avec les points validés et envoie toutes les infos aux joueurs
         self._server.SendToEveryone("tableau", {"tableau" : jeu.tableau_point})
-        self._server.SendToEveryone("tableau_ligne", {"tableau_ligne" : jeu.tableau_ligne})      
+        self._server.SendToEveryone("tableau_ligne", {"tableau_ligne" : jeu.tableau_ligne}) 
+        self._server.SendToEveryone("tableau_pipopipette", {"tableau_pipopipette" : jeu.tableau_pipopipette})
         self._server.SendToEveryone("joueur", {"joueur" : self._server.liste_joueurs[jeu.joueur]})
+        
     
     def Network_nickname(self, data):
         """Récupère le pseudo des joueurs et les met dans une liste (liste_joueurs)."""
@@ -206,6 +290,7 @@ class MyServer(Server):
         self.players[player] = True
         player.Send({"action" : "tableau", "tableau" : jeu.tableau_point})
         player.Send({"action" : "tableau_ligne", "tableau_ligne" : jeu.tableau_ligne})
+        player.Send({"action" : "tableau_pipopipette", "tableau_pipopipette" : jeu.tableau_pipopipette})
  
     def PrintPlayers(self):
         print("players' nicknames :", [p.nickname for p in self.players])
