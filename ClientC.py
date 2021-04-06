@@ -228,7 +228,11 @@ class Fenetre(Tk):
             self.canva.create_line(self.tab_lig[i][0],self.tab_lig[i][1],
                                    self.tab_lig[i][2],self.tab_lig[i][3],
                                   fill=self.tab_lig[i][4])
-        
+    
+    def demande(self, ligne):
+        #envoi au serveur le joueur qu'on veut affronter et soi-même
+        pass
+    
     def myMainLoop(self):
         while self.client.state!=DEAD: 
             self.update()
