@@ -186,8 +186,32 @@ class JeuPipopipette():
             return None
         
         return (liste)
+
+
+class Tournoi():
+    def __init__(self,nbr_joueurs,score_init):
+        self.nbr_joueurs = nbr_joueurs
+        self.score_init = score_init
+        self.classement = [["Rangs", "Noms", "Scores", "Challengation"]]
+        
+    def connection_tournoi(self, nom, place):
+        ligne = [place, nom, self.score_init]
+        self.classement.append(ligne)
     
+    def partie(self):
+        #créer un objet jeu lorsqu'une partie est lancée
+        pass
     
+    def maj_tournoi(self, vainqueur, perdant):
+        #enlever le vainqueur et le perdant du tableau, changer leur score puis
+        #les remettre au bon endroit dans le tableau
+        pass
+        
+    def fin_tournoi(self):
+        #afficher le podium
+        pass
+
+
 ##################################################################################################
 ##################################################################################################
 ########################                  LE SERVEUR                   ###########################
@@ -268,7 +292,12 @@ class ClientChannel(Channel):
         self._server.liste_joueurs.append(self.nickname)
         self._server.PrintPlayers()
         self.Send({"action" : "start"})
-        self.Send({"action" : "joueur", "joueur" : self._server.liste_joueurs[jeu.joueur]})  
+        self.Send({"action" : "joueur", "joueur" : self._server.liste_joueurs[jeu.joueur]})
+        
+    def Network_demande(self, data):
+        #reçoit le pseudo des 2 joueurs qui veulent s'affronter, vérifie si c'est possible
+        #puis lance la partie ou non
+        pass
    
                                            
 class MyServer(Server):
