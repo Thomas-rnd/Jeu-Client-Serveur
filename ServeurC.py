@@ -12,6 +12,7 @@ from PodSixNet.Channel import Channel
 from tkinter import *
 from random import *
 from math import *
+from time import*
 
 #Constantes
 JEU_LARGEUR = 3
@@ -68,7 +69,6 @@ class JeuPipopipette():
             for j in range (self.nbr_ligne-1):
                 ligne.append(['Neutre', 'Neutre', 'Neutre', 'Neutre'])
             self.tableau_carre.append(ligne)
-            
     
     def changer_etat(self, action, i, j):
         """Permet de changer l'état d'un point (pour l'état sélectioné ou validé) et 
@@ -189,7 +189,7 @@ class JeuPipopipette():
 
 
 class Tournoi():
-    def __init__(self,nbr_joueurs,score_init):
+    def __init__(self, nbr_joueurs, score_init):
         self.nbr_joueurs = nbr_joueurs
         self.score_init = score_init
         self.classement = [["Rangs", "Noms", "Scores", "Challengation"]]
@@ -197,11 +197,12 @@ class Tournoi():
     def connection_tournoi(self, nom, place):
         ligne = [place, nom, self.score_init]
         self.classement.append(ligne)
-    
+        self._server.SendToEveryone("tournoi", {"tournoi" : self._server.classement})
+        print(data["tournoi"])
+        
     def partie(self):
-        #créer un objet jeu lorsqu'une partie est lancée
-        pass
-    
+        jeu = JeuPipopipette()
+       
     def maj_tournoi(self, vainqueur, perdant):
         #enlever le vainqueur et le perdant du tableau, changer leur score puis
         #les remettre au bon endroit dans le tableau
@@ -290,6 +291,7 @@ class ClientChannel(Channel):
         """Récupère le pseudo des joueurs et les met dans une liste (liste_joueurs)."""
         self.nickname = data["nickname"]
         self._server.liste_joueurs.append(self.nickname)
+        self.t.connection_tournoi(self, self.nickname, len(self._server.liste_joueurs))
         self._server.PrintPlayers()
         self.Send({"action" : "start"})
         self.Send({"action" : "joueur", "joueur" : self._server.liste_joueurs[jeu.joueur]})
@@ -317,6 +319,7 @@ class MyServer(Server):
         le tableau avec toutes les saucisses lui est envoyé."""
         print("New Player connected")
         self.players[player] = True
+        
         player.Send({"action" : "tableau", "tableau" : jeu.tableau_point})
         player.Send({"action" : "tableau_ligne", "tableau_ligne" : jeu.tableau_ligne})
         player.Send({"action" : "tableau_pipopipette", "tableau_pipopipette" : jeu.tableau_pipopipette})
@@ -353,5 +356,5 @@ else:
     host, port = sys.argv[1].split(":")
 
 s = MyServer(localaddr=(host, int(port)))
-jeu = JeuPipopipette()
+t = Tournoi() 
 s.Launch()
