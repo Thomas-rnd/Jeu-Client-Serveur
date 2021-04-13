@@ -106,10 +106,21 @@ class Client(ConnectionListener):
         exit()
     
 
-#---------------------------------------------------------------------------------------#
+class FenetreClassement(Tk):
+    def __init__(self):
+        YPAD = 2
+        XPAD = 20
+        for i in range(len(self.classement)):
+            l1 = Label(master, text = str(self.classement[i][0]))
+            l1.grid(row = 0, column = 0, pady = YPAD, padx = XPAD)
+            n1 = Label(master, text = str(self.classement[i][1]))
+            n1.grid(row = 0, column = 1, pady = YPAD, padx = XPAD)
+            s1 = Label(master, text = str(self.classement[i][2]))
+            s1.grid(row = 0, column = 2, pady = YPAD, padx = XPAD)
+            b1 = Button(master, text = "Challenge")
+            Button(master, text = "Challenge").grid(row = 0, column = 3, pady = YPAD, padx = XPAD)
 
-
-class Fenetre(Tk):
+class FenetrePartie(Tk):
     """Gère la fenêtre de jeu des clients, en affichant tout ce qui est necessaire."""
     
     def __init__(self, host, port):
@@ -117,6 +128,9 @@ class Fenetre(Tk):
         self.client = Client(host, int(port), self)
         
         #Attribution des paramètres des fenêtres
+        self.title(self.client.nickname)
+        self.geometry("600x400")
+        self.minsize(300,200)
         self.delai       = 250
         self.jeu_largeur = JEU_LARGEUR
         self.jeu_hauteur = JEU_HAUTEUR
@@ -228,6 +242,10 @@ class Fenetre(Tk):
             self.canva.create_line(self.tab_lig[i][0],self.tab_lig[i][1],
                                    self.tab_lig[i][2],self.tab_lig[i][3],
                                   fill=self.tab_lig[i][4])
+   
+    def ecran_fin_jeu(self):
+       # if my_window.adversaire1==0
+       pass
     
     def demande(self, ligne):
         #envoi au serveur le joueur qu'on veut affronter et soi-même
@@ -249,5 +267,5 @@ if len(sys.argv) != 2:
 else:
     host, port = sys.argv[1].split(":")
 
-my_window = Fenetre(host,port)
+my_window = FenetrePartie(host,port)
 my_window.myMainLoop()
