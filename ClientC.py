@@ -119,6 +119,10 @@ class FenetreClassement(Tk):
             s1.grid(row = 0, column = 2, pady = YPAD, padx = XPAD)
             b1 = Button(master, text = "Challenge")
             Button(master, text = "Challenge").grid(row = 0, column = 3, pady = YPAD, padx = XPAD)
+    
+    def demande(self, ligne):
+        #envoi au serveur le joueur qu'on veut affronter et soi-même
+        pass
 
 class FenetrePartie(Tk):
     """Gère la fenêtre de jeu des clients, en affichant tout ce qui est necessaire."""
@@ -246,10 +250,6 @@ class FenetrePartie(Tk):
     def ecran_fin_jeu(self):
        # if my_window.adversaire1==0
        pass
-    
-    def demande(self, ligne):
-        #envoi au serveur le joueur qu'on veut affronter et soi-même
-        pass
     
     def myMainLoop(self):
         while self.client.state!=DEAD: 
