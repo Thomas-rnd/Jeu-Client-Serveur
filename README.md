@@ -1,10 +1,10 @@
 # projet-info-S4
 
-JEU : Jeu pipopipette 
+JEU : Jeu pipopipette en mode Clients/Serveur
 
 OBJECTIF(S) :
 
-  Anticipation et stratégie.
+  Mettre en place un tournoi automatisé entre plusieurs clients sur un jeu d'anticipation et de stratégie.
 
 
 RÈGLE DU JEU : 
